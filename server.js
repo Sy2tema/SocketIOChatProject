@@ -6,7 +6,13 @@ import ViteExpress from "vite-express";
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+        credentials: true,
+    },
+});
 
 io.on("connection", (client) => {
     console.log(`클라이언트 ${client.id}가 접속했습니다.`);
