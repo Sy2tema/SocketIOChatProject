@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -8,11 +8,12 @@ type SocketType = Socket | null;
 
 function App() {
   const [count, setCount] = useState(0)
+
+  const [isConnected, setIsConnected] = useState(false);
   const [socket, setSocket] = useState<SocketType>(null);
   const [username, setUsername] = useState('');
 
   const connectToChatServer = () => {
-    console.log(connectToChatServer);
     const _socket = io('http://localhost:3000', {
       autoConnect: false,
       query: {
@@ -27,6 +28,26 @@ function App() {
     socket?.disconnect();
     setSocket(null);
   };
+
+  const onConnected = () => {
+    console.log('frontend onConnected');
+    setIsConnected(true);
+  };
+
+  const onDisconnected = () => {
+    console.log('frontend onDisconnected');
+    setIsConnected(false);
+  };
+
+  useEffect(() => {
+    socket?.on('connect', onConnected);
+    socket?.on('disconnect', onDisconnected);
+
+    return () => {
+      socket?.off('connect', onConnected);
+      socket?.off('disconnect', onDisconnected);
+    };
+  }, [socket]);
 
   return (
     <>
@@ -43,11 +64,9 @@ function App() {
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
       </div>
       <h1>유저: {username}</h1>
+      <h2>현재 접속상태: {isConnected ? "접속중" : "미접속"}</h2>
       <div className='card'>
         <input value={username} onChange={e => setUsername(e.target.value)} />
         {socket ?
