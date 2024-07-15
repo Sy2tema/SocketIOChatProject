@@ -6,10 +6,22 @@ import ViteExpress from "vite-express";
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+        credentials: true,
+    },
+});
 
 io.on("connection", (client) => {
-    console.log(`클라이언트 ${client.id}가 접속했습니다.`);
+    const connectedUsername = client.handshake.query.username;
+
+    console.log(`클라이언트 ${connectedUsername}가 접속했습니다.`);
+
+    client.on("disconnect", () => {
+        console.log(`클라이언트 ${connectedUsername}가 접속 종료했습니다.`);
+    })
 });
 server.listen(3000, () => {
     console.log("서버가 포트 3000에서 실행되고 있습니다");
@@ -25,7 +37,7 @@ app.get("/api", (_, res) => {
 });
 
 // 에러 핸들링 미들웨어
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
     console.error(err.stack);
     res.status(500).send("Something broke!");
 })
