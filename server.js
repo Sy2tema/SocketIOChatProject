@@ -17,11 +17,19 @@ const io = new Server(server, {
 io.on("connection", (client) => {
     const connectedUsername = client.handshake.query.username;
 
-    console.log(`클라이언트 ${connectedUsername}가 접속했습니다.`);
+    console.log(`클라이언트 ${connectedUsername}이(가) 접속했습니다.`);
+
+    client.broadcast.emit("new message", { username: "관리자", message: `[${connectedUsername}]님이 방에 들어왔습니다!` });
+
+    client.on("new message", (message) => {
+        console.log(message);
+        io.emit("new message", { username: message.username, message: message.message });
+    });
 
     client.on("disconnect", () => {
         console.log(`클라이언트 ${connectedUsername}가 접속 종료했습니다.`);
-    })
+        io.emit("new message", { username: "관리자", message: `[${connectedUsername}]님이 방에서 나갔습니다.` });
+    });
 });
 server.listen(3000, () => {
     console.log("서버가 포트 3000에서 실행되고 있습니다");
