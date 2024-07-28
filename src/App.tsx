@@ -12,6 +12,7 @@ function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [socket, setSocket] = useState<SocketType>(null);
   const [username, setUsername] = useState('');
+  const [userInput, setUserInput] = useState('');
 
   const connectToChatServer = () => {
     const _socket = io('http://localhost:3000', {
@@ -39,13 +40,28 @@ function App() {
     setIsConnected(false);
   };
 
+  const onMessageReceived = (message: object) => {
+    console.log('frontend onMessageReceived');
+    console.log(message);
+  };
+
+  const sendMessageToChatServer = () => {
+    console.log(`sendMessageToChatServer input: ${userInput}`);
+
+    socket?.emit("new message", { username: username, message: userInput }, (response: object) => {
+      console.log(response);
+    });
+  };
+
   useEffect(() => {
     socket?.on('connect', onConnected);
     socket?.on('disconnect', onDisconnected);
+    socket?.on('new message', onMessageReceived);
 
     return () => {
       socket?.off('connect', onConnected);
       socket?.off('disconnect', onDisconnected);
+      socket?.off('new message', onMessageReceived);
     };
   }, [socket]);
 
@@ -78,6 +94,14 @@ function App() {
           </button>
         }
       </div>
+      {socket && (
+        <div className='card'>
+          <input value={userInput} onChange={e => setUserInput(e.target.value)} />
+          <button onClick={() => sendMessageToChatServer()}>
+            전송
+          </button>
+        </div>
+      )}
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
